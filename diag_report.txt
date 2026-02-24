@@ -1,0 +1,8 @@
+ERROR during diagnosis: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+SequelizeConnectionError: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string
+    at Client._connectionCallback (D:\Sem-4\Demo_SSE_1\backend\node_modules\sequelize\lib\dialects\postgres\connection-manager.js:149:20)
+    at Client._handleErrorWhileConnecting (D:\Sem-4\Demo_SSE_1\backend\node_modules\pg\lib\client.js:376:19)
+    at Client._handleErrorEvent (D:\Sem-4\Demo_SSE_1\backend\node_modules\pg\lib\client.js:386:19)
+    at Connection.emit (node:events:508:28)
+    at Client._handleAuthSASLContinue (D:\Sem-4\Demo_SSE_1\backend\node_modules\pg\lib\client.js:324:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)

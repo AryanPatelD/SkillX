@@ -4,11 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { User, Mail, Save, Edit2, Coins } from 'lucide-react';
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({ full_name: '', bio: '' });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchProfile();
@@ -16,6 +17,7 @@ const Profile = () => {
 
     const fetchProfile = async () => {
         try {
+            setError(null);
             const response = await api.get('/profile');
             setProfile(response.data);
             setFormData({
@@ -25,6 +27,7 @@ const Profile = () => {
             setLoading(false);
         } catch (error) {
             console.error('Error fetching profile:', error);
+            setError('Failed to load profile. Please check your authentication.');
             setLoading(false);
         }
     };
@@ -33,7 +36,10 @@ const Profile = () => {
         e.preventDefault();
         try {
             const response = await api.put('/profile', formData);
-            setProfile(response.data.user);
+            const updatedUser = response.data.user;
+            setProfile(updatedUser);
+            // Sync AuthContext + localStorage so Dashboard shows updated bio immediately
+            updateUser({ full_name: updatedUser.full_name, bio: updatedUser.bio });
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -41,6 +47,45 @@ const Profile = () => {
     };
 
     if (loading) return <div>Loading...</div>;
+
+    if (error) {
+        return (
+            <div style={{
+                padding: '2rem',
+                maxWidth: '900px',
+                margin: '0 auto',
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <div style={{
+                    padding: '2rem',
+                    backgroundColor: '#fee',
+                    border: '1px solid #fcc',
+                    borderRadius: '8px',
+                    textAlign: 'center'
+                }}>
+                    <h2 style={{ color: '#c33', marginBottom: '1rem' }}>Error</h2>
+                    <p style={{ marginBottom: '1.5rem' }}>{error}</p>
+                    <button onClick={fetchProfile} style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!profile) {
+        return <div>No profile data available</div>;
+    }
 
     const containerStyle = {
         padding: 'clamp(0.75rem, 3%, 1.25rem)',
@@ -236,14 +281,14 @@ const Profile = () => {
                                 color: 'white',
                                 fontWeight: 'bold'
                             }}>
-                                {profile.full_name[0].toUpperCase()}
+                                {profile?.full_name?.[0]?.toUpperCase() || 'U'}
                             </div>
                             <div style={{ minWidth: 0 }}>
-                                <h2 style={{ fontSize: 'clamp(1.125rem, 3.5vw, 1.375rem)', marginBottom: '0.125rem', margin: 0 }}>{profile.full_name}</h2>
-                                <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', margin: 0, fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>Roll: {profile.roll_no}</p>
+                                <h2 style={{ fontSize: 'clamp(1.125rem, 3.5vw, 1.375rem)', marginBottom: '0.125rem', margin: 0 }}>{profile?.full_name || 'No name'}</h2>
+                                <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', margin: 0, fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>Roll: {profile?.roll_no || 'N/A'}</p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-muted)', fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', wordBreak: 'break-word' }}>
                                     <Mail size={14} />
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.email}</span>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.email || 'No email'}</span>
                                 </div>
                             </div>
                         </div>
@@ -268,7 +313,7 @@ const Profile = () => {
                                 color: 'white',
                                 flexShrink: 0
                             }}>
-                                <Coins size="clamp(18px, 4vw, 24px)" />
+                                <Coins size={22} />
                             </div>
                             <div style={{ minWidth: 0 }}>
                                 <p style={{ margin: 0, fontSize: 'clamp(0.7rem, 1.5vw, 0.8rem)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Credits Available</p>
@@ -298,7 +343,7 @@ const Profile = () => {
                                             className="badge badge-primary"
                                             style={{ padding: 'clamp(0.3rem, 0.8vw, 0.4rem) clamp(0.6rem, 1.5vw, 0.85rem)', fontSize: 'clamp(0.75rem, 1.3vw, 0.85rem)' }}
                                         >
-                                            {skill.name} • {skill.UserSkill.proficiency}
+                                            {skill.name} • {skill.UserSkill?.proficiency}
                                         </span>
                                     ))
                                 ) : (

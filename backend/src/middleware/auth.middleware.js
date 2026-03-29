@@ -12,6 +12,14 @@ module.exports = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(400).json({ message: 'Invalid token.' });
+        console.error('JWT Verification Error:', error.message);
+        console.error('Token:', token ? token.substring(0, 50) + '...' : 'No token');
+        console.error('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expired. Please login again.' });
+        }
+        
+        res.status(401).json({ message: 'Invalid token. ' + error.message });
     }
 };

@@ -19,12 +19,32 @@ import Navbar from './components/Navbar';
 
 const Layout = ({ children }) => {
   return (
-    <>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Navbar />
-      <div className="page-container">
-        {children}
-      </div>
-    </>
+      {/* spacer so content doesn't go under the fixed sidebar */}
+      <style>{`
+        .main-content-area {
+          margin-left: 240px;
+          flex: 1;
+          min-width: 0;
+          transition: margin-left 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        [data-sidebar="collapsed"] .main-content-area {
+          margin-left: 72px;
+        }
+        @media (max-width: 768px) {
+          .main-content-area {
+            margin-left: 0 !important;
+            padding-top: 64px;
+          }
+        }
+      `}</style>
+      <main className="main-content-area">
+        <div className="page-container">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 };
 

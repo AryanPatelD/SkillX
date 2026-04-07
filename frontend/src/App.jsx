@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -7,19 +8,24 @@ import Profile from './pages/Profile';
 import SkillsHub from './pages/SkillsHub';
 import OfferSkill from './pages/OfferSkill';
 import RequestHelp from './pages/RequestHelp';
-import BookSession from './pages/BookSession';
 import MySessions from './pages/MySessions';
+import MeetingRoom from './pages/MeetingRoom';
+import UserFeedbackPage from './pages/UserFeedbackPage';
+import Navbar from './components/Navbar';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" />;
 };
 
-import Navbar from './components/Navbar';
+const RootRoute = () => {
+  const { user } = useAuth();
+  return user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />;
+};
 
 const Layout = ({ children }) => {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       <Navbar />
       {/* spacer so content doesn't go under the fixed sidebar */}
       <style>{`
@@ -52,9 +58,10 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <SocketProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           <Route
             path="/dashboard"
             element={
@@ -106,16 +113,6 @@ function App() {
             }
           />
           <Route
-            path="/book-session"
-            element={
-              <PrivateRoute>
-                <Layout>
-                  <BookSession />
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-          <Route
             path="/my-sessions"
             element={
               <PrivateRoute>
@@ -125,8 +122,25 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
+          <Route
+            path="/meeting/:meetingId"
+            element={
+              <PrivateRoute>
+                <MeetingRoom />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/feedback/:userId"
+            element={
+              <Layout>
+                <UserFeedbackPage />
+              </Layout>
+            }
+          />
+          <Route path="/" element={<RootRoute />} />
+          </Routes>
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

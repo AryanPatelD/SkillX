@@ -35,6 +35,14 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: 0,
             allowNull: false,
         },
+        last_quiz_attempt_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        quiz_cooldown_until: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
     });
 
     return User;

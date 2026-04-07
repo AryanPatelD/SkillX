@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learner Portal – Skill Exchange</title>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons (via CDN for clean look) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Step Indicator */
+    .steps {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .steps::before {
+      content: "";
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    .step {
+      position: relative;
+      z-index: 2;
+      background: var(--bg);
+      padding: 0 10px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .step-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--border);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-icon {
+      background: var(--primary);
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .step.active .step-label {
+      color: var(--primary);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: var(--success-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      margin-top: 12px;
+    }
+
+    .btn-outline:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+
+    /* Slots List */
+    #slotList {
+      list-style: none;
+      margin: 16px 0;
+    }
+
+    #slotList li {
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    /* Confirmation UI */
+    #confirmation h3 {
+      color: var(--success);
+      margin-bottom: 12px;
+    }
+
+    .confirmation-details {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+
+    .meet-link-box {
+      margin-top: 12px;
+      padding: 10px;
+      background: white;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      word-break: break-all;
+      font-family: monospace;
+      font-size: 0.8125rem;
+    }
+
+    .meet-link-box a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 20px 10px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Skill Exchange</h1>
+      <p class="subtitle">Book your session with a mentor today</p>
+    </header>
+
+    <!-- Step Indicator -->
+    <div class="steps">
+      <div class="step active" id="step1">
+        <div class="step-icon">1</div>
+        <div class="step-label">Add Slots</div>
+      </div>
+      <div class="step" id="step2">
+        <div class="step-icon">2</div>
+        <div class="step-label">Submit</div>
+      </div>
+      <div class="step" id="step3">
+        <div class="step-icon">3</div>
+        <div class="step-label">Status</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i data-lucide="user"></i> Learner Details</div>
+      <div class="form-group">
+        <label for="learnerName">Full Name</label>
+        <input type="text" id="learnerName" placeholder="Enter your name">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i data-lucide="calendar"></i> Propose Sessions</div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 16px;">Suggest up to 3 time slots for the
+        tutor to choose from.</p>
+
+      <div class="form-group">
+        <label for="slotDate">Date</label>
+        <input type="date" id="slotDate">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label for="startTime">Start Time</label>
+          <input type="time" id="startTime">
+        </div>
+        <div class="form-group">
+          <label for="endTime">End Time</label>
+          <input type="time" id="endTime">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addSlot()">
+        <i data-lucide="plus"></i> Add Slot
+      </button>
+
+      <div id="slotListContainer">
+        <h3 style="font-size: 0.875rem; margin: 20px 0 10px;">Your Selection</h3>
+        <ul id="slotList">
+          <div class="empty-state">No slots added yet.</div>
+        </ul>
+      </div>
+
+      <button class="btn btn-success" onclick="submitSlots()">
+        <i data-lucide="send"></i> Submit All Slots
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i data-lucide="shield-check"></i> Session Status</div>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">Check if your tutor has confirmed a
+        session.</p>
+      <button class="btn btn-outline" onclick="checkStatus()">
+        <i data-lucide="refresh-cw"></i> Check Session Status
+      </button>
+      <div id="confirmation"></div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    let slots = [];
+
+    const slotDateInput = document.getElementById("slotDate");
+    const startTimeInput = document.getElementById("startTime");
+    const endTimeInput = document.getElementById("endTime");
+
+    function addSlot() {
+      if (!slotDateInput.value || !startTimeInput.value || !endTimeInput.value) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      if (slots.length >= 3) {
+        alert("Maximum of 3 slots allowed");
+        return;
+      }
+
+      slots.push({
+        date: slotDateInput.value,
+        startTime: startTimeInput.value,
+        endTime: endTimeInput.value
+      });
+
+      renderSlots();
+
+      // Visual feedback: Update step indicator if first slot added
+      if (slots.length === 1) {
+        document.getElementById('step2').classList.add('active');
+      }
+    }
+
+    function renderSlots() {
+      const ul = document.getElementById("slotList");
+      if (slots.length === 0) {
+        ul.innerHTML = '<div class="empty-state">No slots added yet.</div>';
+        return;
+      }
+
+      ul.innerHTML = "";
+      slots.forEach((s, index) => {
+        ul.innerHTML += `
+      <li>
+        <i data-lucide="clock" style="width: 16px; color: var(--primary);"></i>
+        <span>${s.date} @ ${s.startTime} - ${s.endTime}</span>
+      </li>
+    `;
+      });
+      lucide.createIcons();
+    }
+
+    function submitSlots() {
+      const name = document.getElementById("learnerName").value;
+
+      if (!name || slots.length === 0) {
+        alert("Enter name and at least one slot");
+        return;
+      }
+
+      fetch("http://localhost:3000/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          learnerName: name,
+          slots: slots
+        })
+      })
+        .then(res => res.json())
+        .then(() => {
+          alert("Slots submitted successfully! Please wait for tutor confirmation.");
+          slots = [];
+          renderSlots();
+          // Update step indicator
+          document.getElementById('step3').classList.add('active');
+        })
+        .catch(() => alert("Server is not running. Please start the backend."));
+    }
+
+    async function checkStatus() {
+      try {
+        const response = await fetch("http://127.0.0.1:3000/api/sessions");
+        const data = await response.json();
+
+        if (!data) {
+          alert("No session found yet.");
+          return;
+        }
+
+        if (data.status !== "scheduled") {
+          alert("Tutor has not confirmed yet. Status: Pending");
+          return;
+        }
+
+        document.getElementById("confirmation").innerHTML = `
+      <div class="confirmation-details">
+        <h3><i data-lucide="check-circle" style="vertical-align: middle; margin-right: 8px;"></i> Session Confirmed!</h3>
+        <p style="font-size: 0.875rem; margin-bottom: 8px;">
+          <strong>Date:</strong> ${data.confirmedSlot.date}<br>
+          <strong>Time:</strong> ${data.confirmedSlot.startTime} - ${data.confirmedSlot.endTime}
+        </p>
+        <div class="meet-link-box">
+          <strong>Meeting Link:</strong><br>
+          <a href="${data.meetLink}" target="_blank">${data.meetLink}</a>
+        </div>
+        <a href="${data.meetLink}" target="_blank" class="btn btn-primary" style="margin-top: 16px; text-decoration: none;">
+           Join Now
+        </a>
+      </div>
+    `;
+        lucide.createIcons();
+        // Ensure last step is active
+        document.getElementById('step2').classList.add('active');
+        document.getElementById('step3').classList.add('active');
+      } catch (err) {
+        alert("Could not fetch session status. Is the server running?");
+      }
+    }
+  </script>
+
+</body>
+
+</html>

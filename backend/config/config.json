@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "Aryan@2605",
+    "database": "ssems_db",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "Aryan@2605",
+    "database": "ssems_db_test",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "Aryan@2605",
+    "database": "ssems_db",
+    "host": "localhost",
+    "dialect": "postgres"
+  }
+}

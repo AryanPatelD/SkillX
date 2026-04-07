@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import QuizModal from './QuizModal';
+import UpcomingMeetings from './UpcomingMeetings';
 import {
     LayoutDashboard,
     Search,
@@ -21,6 +23,7 @@ const Sidebar = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [quizModalOpen, setQuizModalOpen] = useState(false);
 
     useEffect(() => {
         document.body.setAttribute('data-sidebar', collapsed ? 'collapsed' : 'expanded');
@@ -236,27 +239,49 @@ const Sidebar = () => {
                 })}
             </nav>
 
+            {/* Upcoming Meetings Section */}
+            <UpcomingMeetings collapsed={collapsed} isMobile={isMobile} />
+
             {/* Bottom Section */}
             <div style={{ padding: '0 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
 
                 {/* Credits */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
-                    padding: collapsed && !isMobile ? '0.75rem' : '0.75rem 1rem',
-                    borderRadius: '10px',
-                    background: 'rgba(99,102,241,0.08)',
-                    border: '1px solid rgba(99,102,241,0.15)',
-                }}>
-                    <Coins size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                <button
+                    onClick={() => setQuizModalOpen(true)}
+                    title={collapsed && !isMobile ? 'Take Quiz' : ''}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
+                        padding: collapsed && !isMobile ? '0.75rem' : '0.75rem 1rem',
+                        borderRadius: '10px',
+                        background: user?.credits === 0 ? 'rgba(239,68,68,0.08)' : 'rgba(99,102,241,0.08)',
+                        border: user?.credits === 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(99,102,241,0.15)',
+                        color: user?.credits === 0 ? 'var(--error)' : 'var(--primary)',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        transition: 'all 0.18s ease',
+                        width: '100%',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.opacity = '0.8';
+                        e.target.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.opacity = '1';
+                        e.target.style.transform = 'translateY(0)';
+                    }}
+                >
+                    <Coins size={18} style={{ flexShrink: 0 }} />
                     {(!collapsed || isMobile) && (
-                        <span style={{ fontWeight: '700', color: 'var(--primary)', fontSize: '0.9rem' }}>
+                        <span>
                             {user?.credits || 0} Credits
+                            {user?.credits === 0 && ' - Quiz Available'}
                         </span>
                     )}
-                </div>
+                </button>
 
                 {/* Logout */}
                 <button
@@ -448,6 +473,16 @@ const Sidebar = () => {
                     </div>
                 </div>
             )}
+
+            {/* Quiz Modal */}
+            <QuizModal
+                isOpen={quizModalOpen}
+                onClose={() => setQuizModalOpen(false)}
+                user={user}
+                onQuizComplete={() => {
+                    // Refresh user data after quiz completion
+                }}
+            />
         </>
     );
 };

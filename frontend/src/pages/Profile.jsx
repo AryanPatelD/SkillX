@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Save, Edit2, Coins } from 'lucide-react';
+import RatingDisplay from '../components/RatingDisplay';
+import UserFeedback from '../components/UserFeedback';
 
 const Profile = () => {
-    const { user, updateUser } = useAuth();
+    const { user } = useAuth();
     const [profile, setProfile] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({ full_name: '', bio: '' });
@@ -19,15 +21,18 @@ const Profile = () => {
         try {
             setError(null);
             const response = await api.get('/profile');
-            setProfile(response.data);
+            // Also fetch public profile to get ratings
+            const publicResponse = await api.get(`/profile/public/${response.data.id}`);
+            setProfile(publicResponse.data);
             setFormData({
-                full_name: response.data.full_name,
-                bio: response.data.bio || ''
+                full_name: publicResponse.data.full_name,
+                bio: publicResponse.data.bio || ''
             });
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching profile:', error);
-            setError('Failed to load profile. Please check your authentication.');
+            setError(error.response?.data?.message || 'Failed to load profile. Please try again.');
+            setProfile(null);
+        } finally {
             setLoading(false);
         }
     };
@@ -36,55 +41,74 @@ const Profile = () => {
         e.preventDefault();
         try {
             const response = await api.put('/profile', formData);
-            const updatedUser = response.data.user;
-            setProfile(updatedUser);
-            // Sync AuthContext + localStorage so Dashboard shows updated bio immediately
-            updateUser({ full_name: updatedUser.full_name, bio: updatedUser.bio });
+            setProfile(response.data.user);
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
+            setError(error.response?.data?.message || 'Failed to update profile. Please try again.');
         }
     };
 
     if (loading) return <div>Loading...</div>;
-
+    
     if (error) {
         return (
-            <div style={{
-                padding: '2rem',
-                maxWidth: '900px',
-                margin: '0 auto',
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-            }}>
-                <div style={{
-                    padding: '2rem',
-                    backgroundColor: '#fee',
-                    border: '1px solid #fcc',
+            <div style={{ padding: 'clamp(0.75rem, 3%, 1.25rem)', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+                <div style={{ 
+                    background: 'rgba(239, 68, 68, 0.1)', 
+                    border: '1px solid rgba(239, 68, 68, 0.5)',
                     borderRadius: '8px',
-                    textAlign: 'center'
+                    padding: '1rem',
+                    color: '#dc2626',
+                    marginBottom: '1rem'
                 }}>
-                    <h2 style={{ color: '#c33', marginBottom: '1rem' }}>Error</h2>
-                    <p style={{ marginBottom: '1.5rem' }}>{error}</p>
-                    <button onClick={fetchProfile} style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}>
-                        Try Again
+                    <p style={{ margin: 0, marginBottom: '0.5rem', fontWeight: 'bold' }}>Error</p>
+                    <p style={{ margin: 0, marginBottom: '1rem' }}>{error}</p>
+                    <button 
+                        onClick={fetchProfile}
+                        style={{
+                            background: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '0.5rem 1rem',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Retry
                     </button>
                 </div>
             </div>
         );
     }
-
+    
     if (!profile) {
-        return <div>No profile data available</div>;
+        return (
+            <div style={{ padding: 'clamp(0.75rem, 3%, 1.25rem)', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+                <div style={{ 
+                    background: 'rgba(239, 68, 68, 0.1)', 
+                    border: '1px solid rgba(239, 68, 68, 0.5)',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    color: '#dc2626'
+                }}>
+                    <p style={{ margin: 0, marginBottom: '1rem' }}>Unable to load profile data.</p>
+                    <button 
+                        onClick={fetchProfile}
+                        style={{
+                            background: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '0.5rem 1rem',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     const containerStyle = {
@@ -284,11 +308,11 @@ const Profile = () => {
                                 {profile?.full_name?.[0]?.toUpperCase() || 'U'}
                             </div>
                             <div style={{ minWidth: 0 }}>
-                                <h2 style={{ fontSize: 'clamp(1.125rem, 3.5vw, 1.375rem)', marginBottom: '0.125rem', margin: 0 }}>{profile?.full_name || 'No name'}</h2>
+                                <h2 style={{ fontSize: 'clamp(1.125rem, 3.5vw, 1.375rem)', marginBottom: '0.125rem', margin: 0 }}>{profile?.full_name || 'Unknown'}</h2>
                                 <p style={{ color: 'var(--text-muted)', marginBottom: '0.25rem', margin: 0, fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>Roll: {profile?.roll_no || 'N/A'}</p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-muted)', fontSize: 'clamp(0.75rem, 1.5vw, 0.85rem)', wordBreak: 'break-word' }}>
                                     <Mail size={14} />
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.email || 'No email'}</span>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile?.email || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -313,7 +337,7 @@ const Profile = () => {
                                 color: 'white',
                                 flexShrink: 0
                             }}>
-                                <Coins size={22} />
+                                <Coins size="clamp(18px, 4vw, 24px)" />
                             </div>
                             <div style={{ minWidth: 0 }}>
                                 <p style={{ margin: 0, fontSize: 'clamp(0.7rem, 1.5vw, 0.8rem)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Credits Available</p>
@@ -343,12 +367,29 @@ const Profile = () => {
                                             className="badge badge-primary"
                                             style={{ padding: 'clamp(0.3rem, 0.8vw, 0.4rem) clamp(0.6rem, 1.5vw, 0.85rem)', fontSize: 'clamp(0.75rem, 1.3vw, 0.85rem)' }}
                                         >
-                                            {skill.name} • {skill.UserSkill?.proficiency}
+                                            {skill.name} • {skill.UserSkill.proficiency}
                                         </span>
                                     ))
                                 ) : (
                                     <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(0.85rem, 1.5vw, 0.95rem)', margin: 0 }}>No skills offered yet.</p>
                                 )}
+                            </div>
+                        </div>
+
+                        <div className="profile-section">
+                            <h3 style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1rem)', marginBottom: '0.5rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.25rem', margin: 0 }}>My Rating & Reviews</h3>
+                            <div style={{ marginTop: '1rem' }}>
+                                <RatingDisplay 
+                                    averageRating={profile.ratings?.averageRating || 0} 
+                                    totalFeedbacks={profile.ratings?.totalFeedbacks || 0}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="profile-section">
+                            <h3 style={{ fontSize: 'clamp(0.95rem, 2.5vw, 1rem)', marginBottom: '0.5rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.25rem', margin: 0 }}>Recent Feedback</h3>
+                            <div style={{ marginTop: '1rem' }}>
+                                <UserFeedback userId={profile.id} showAll={false} />
                             </div>
                         </div>
                     </div>

@@ -43,6 +43,8 @@ const RequestHelp = () => {
     const [selectedSkill, setSelectedSkill] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [deadlineDate, setDeadlineDate] = useState('');
+    const [deadlineTime, setDeadlineTime] = useState('');
     const [urgency, setUrgency] = useState('normal');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -66,10 +68,29 @@ const RequestHelp = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
+
+        // Combine date and time into deadline
+        let deadline = null;
+        if (deadlineDate) {
+            deadline = deadlineTime ? `${deadlineDate}T${deadlineTime}` : `${deadlineDate}T00:00`;
+        }
+
+        // Validate deadline is not in the past
+        if (deadline) {
+            const selectedDate = new Date(deadline);
+            const now = new Date();
+            if (selectedDate < now) {
+                setError('Deadline cannot be in the past. Please select a future date and time.');
+                setLoading(false);
+                return;
+            }
+        }
+
         try {
             await api.post('/skills/request', {
                 skillId: selectedSkill || null,
                 description: `${title ? `Title: ${title}\n\n` : ''}${description}`,
+                deadline: deadline || null,
             });
             setSuccess(true);
             setTimeout(() => navigate('/skills-hub'), 1400);
@@ -86,6 +107,37 @@ const RequestHelp = () => {
     const selectedSkillObj = skills.find(s => String(s.id) === String(selectedSkill));
     const charCount = description.length;
     const formReady = selectedSkill && title.trim() && description.trim();
+
+    // Get minimum date in YYYY-MM-DD format
+    const getMinDate = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    // Get minimum time in HH:MM format for today
+    const getMinTime = () => {
+        if (deadlineDate === getMinDate()) {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        return '00:00';
+    };
+
+    // Convert 24-hour time to 12-hour format with AM/PM
+    const formatTime12Hour = (time24) => {
+        if (!time24) return 'Select time';
+        const [hours, minutes] = time24.split(':');
+        let hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12;
+        hour = hour ? hour : 12;
+        return `${String(hour).padStart(2, '0')}:${minutes} ${ampm}`;
+    };
 
     return (
         <div style={{ padding: '2rem', maxWidth: '680px', margin: '0 auto' }}>
@@ -347,6 +399,45 @@ const RequestHelp = () => {
                         />
                         <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                             More detail = faster tutor responses
+                        </p>
+                    </div>
+
+                    {/* Deadline - Date and Time */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.6rem', display: 'block' }}>
+                            By When Do You Need to Learn This? <span style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)' }}>(Optional)</span>
+                        </label>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <input
+                                    type="date"
+                                    className="input-field"
+                                    value={deadlineDate}
+                                    onChange={(e) => setDeadlineDate(e.target.value)}
+                                    min={getMinDate()}
+                                    style={{ cursor: 'pointer' }}
+                                    placeholder="Date"
+                                />
+                                <p style={{ margin: '0.3rem 0 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>Date</p>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <input
+                                    type="time"
+                                    className="input-field"
+                                    value={deadlineTime}
+                                    onChange={(e) => setDeadlineTime(e.target.value)}
+                                    min={getMinTime()}
+                                    disabled={!deadlineDate}
+                                    style={{ cursor: deadlineDate ? 'pointer' : 'not-allowed', opacity: !deadlineDate ? 0.5 : 1 }}
+                                    placeholder="Time"
+                                />
+                                <p style={{ margin: '0.3rem 0 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                    {deadlineTime ? formatTime12Hour(deadlineTime) : 'Time'}
+                                </p>
+                            </div>
+                        </div>
+                        <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            This helps tutors understand your timeline and suggest suitable session times
                         </p>
                     </div>
 

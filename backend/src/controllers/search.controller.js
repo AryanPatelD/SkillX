@@ -2,6 +2,7 @@ const db = require('../models');
 const Skill = db.Skill;
 const User = db.User;
 const SkillRequest = db.SkillRequest;
+const Session = db.Session;
 const { Op } = require('sequelize');
 
 exports.searchOfferedSkills = async (req, res) => {
@@ -71,7 +72,21 @@ exports.searchRequests = async (req, res) => {
             ],
         });
 
-        res.json(requests);
+        // Filter out requests where current user has already offered to help (has a session as provider)
+        let filteredRequests = requests;
+        if (req.user) {
+            const userSessionIds = await Session.findAll({
+                where: {
+                    providerId: req.user.id,
+                    status: { [Op.in]: ['Pending', 'Confirmed'] },
+                },
+                attributes: ['skillRequestId'],
+            });
+            const userOfferedRequestIds = userSessionIds.map(s => s.skillRequestId);
+            filteredRequests = requests.filter(r => !userOfferedRequestIds.includes(r.id));
+        }
+
+        res.json(filteredRequests);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

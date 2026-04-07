@@ -1,0 +1,50 @@
+/* Feedback Form Styles */
+
+.feedback-modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+textarea:focus {
+    border-color: #2563eb !important;
+    outline: none !important;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+    .feedback-modal {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}

@@ -1,16 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { Search, BookOpen, HelpCircle, Plus, User } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import OfferHelpModal from '../components/OfferHelpModal';
 
 const SkillsHub = () => {
+    const { socket, connected } = useSocket();
     const [activeTab, setActiveTab] = useState('skills'); // 'skills' or 'requests'
     const [items, setItems] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [selectedSkill, setSelectedSkill] = useState(null);
 
     useEffect(() => {
         fetchItems();
     }, [activeTab, searchQuery]);
+
+    // Listen for real-time events
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleSkillOffered = () => {
+            console.log('🔔 New skill offered by another user');
+            if (activeTab === 'skills') fetchItems();
+        };
+
+        const handleSkillRequested = () => {
+            console.log('🔔 New skill request from another user');
+            if (activeTab === 'requests') fetchItems();
+        };
+
+        const handleSessionCreated = () => {
+            console.log('🔔 New session created');
+            if (activeTab === 'requests') fetchItems();
+        };
+
+        socket.on('skillOffered', handleSkillOffered);
+        socket.on('skillRequested', handleSkillRequested);
+        socket.on('sessionCreated', handleSessionCreated);
+
+        return () => {
+            socket.off('skillOffered', handleSkillOffered);
+            socket.off('skillRequested', handleSkillRequested);
+            socket.off('sessionCreated', handleSessionCreated);
+        };
+    }, [socket, activeTab]);
 
     const fetchItems = async () => {
         setLoading(true);
@@ -141,7 +177,20 @@ const SkillsHub = () => {
                                                     Related Skill: {item.skill.name}
                                                 </div>
                                             )}
-                                            <button className="btn btn-primary btn-sm" style={{ width: 'fit-content', marginTop: '0.5rem' }}>
+                                            {item.deadline && (
+                                                <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    📅 Deadline: {new Date(item.deadline).toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                </div>
+                                            )}
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedRequest(item);
+                                                    setSelectedSkill(item.skill);
+                                                    setModalOpen(true);
+                                                }}
+                                                className="btn btn-primary btn-sm" 
+                                                style={{ width: 'fit-content', marginTop: '0.5rem' }}
+                                            >
                                                 Offer to Help
                                             </button>
                                         </div>
@@ -156,6 +205,18 @@ const SkillsHub = () => {
                     )}
                 </div>
             )}
+
+            <OfferHelpModal
+                request={selectedRequest}
+                skill={selectedSkill}
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onSuccess={() => {
+                    fetchItems();
+                    setSelectedRequest(null);
+                    setSelectedSkill(null);
+                }}
+            />
         </div>
     );
 };

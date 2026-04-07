@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutor Dashboard – Skill Exchange</title>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --success: #10b981;
+      --success-hover: #059669;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-refresh {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-refresh:hover {
+      background: var(--bg);
+    }
+
+    /* Slot Options */
+    .slot-grid {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .slot-card {
+      position: relative;
+      background: white;
+      border: 2px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slot-card:hover {
+      border-color: var(--primary);
+      background: #f0f9ff;
+    }
+
+    .slot-card input {
+      display: none;
+    }
+
+    .slot-card.selected {
+      border-color: var(--primary);
+      background: #f0f9ff;
+      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+    }
+
+    .slot-card.selected::after {
+      content: "✓";
+      position: absolute;
+      right: 16px;
+      color: var(--primary);
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+
+    /* Result UI */
+    .success-box {
+      text-align: center;
+      padding: 32px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+    }
+
+    .success-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--success);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .meet-link {
+      margin: 20px 0;
+      padding: 12px;
+      background: white;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      word-break: break-all;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+
+    .meet-link a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Tutor Dashboard</h1>
+      <button class="btn btn-refresh" onclick="loadSession()">
+        <i data-lucide="rotate-cw"></i> Refresh Requests
+      </button>
+    </header>
+
+    <div id="content">
+      <div class="card empty-state">
+        <i data-lucide="loader-2"
+          style="width: 40px; height: 40px; margin: 0 auto 12px; animation: spin 2s linear infinite;"></i>
+        <p>Fetching latest requests...</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+
+  <script>
+    // Initialize Icons
+    lucide.createIcons();
+
+    let currentSession = null;
+    let selectedSlot = null;
+
+    function loadSession() {
+      fetch("http://127.0.0.1:3000/api/sessions")
+        .then(res => res.json())
+        .then(data => {
+          if (!data) {
+            document.getElementById("content").innerHTML = `
+          <div class="card empty-state">
+            <i data-lucide="inbox" style="width: 40px; height: 40px; margin: 0 auto 12px; color: var(--border);"></i>
+            <p>No pending session requests found.</p>
+          </div>
+        `;
+            lucide.createIcons();
+            return;
+          }
+
+          currentSession = data;
+
+          if (data.status === "scheduled") {
+            renderConfirmed(data);
+          } else {
+            renderSession();
+          }
+        })
+        .catch(() => {
+          document.getElementById("content").innerHTML = `
+        <div class="card empty-state">
+          <p style="color: #ef4444;">Could not connect to the server. Please ensure the backend is running.</p>
+        </div>
+      `;
+        });
+    }
+
+    function renderSession() {
+      let html = `
+    <div class="card">
+      <div class="card-title">
+        <i data-lucide="user"></i> Learning Request
+        <span class="badge" style="margin-left: auto;">Pending Response</span>
+      </div>
+      <p style="font-size: 0.875rem; margin-bottom: 20px;">
+        <strong>Learner:</strong> ${currentSession.learnerName}<br>
+        <span style="color: var(--text-muted);">Please select one of the following proposed slots to confirm.</span>
+      </p>
+
+      <div class="slot-grid">
+  `;
+
+      currentSession.slots.forEach((slot, index) => {
+        html += `
+      <div class="slot-card" id="slot-${index}" onclick="selectSlot(${index})">
+        <i data-lucide="clock" style="width: 18px; color: var(--text-muted);"></i>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">${slot.date}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${slot.startTime} - ${slot.endTime}</div>
+        </div>
+      </div>
+    `;
+      });
+
+      html += `
+      </div>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="confirmSlot()">
+        <i data-lucide="check-circle-2"></i> Confirm Selected Slot
+      </button>
+    </div>
+  `;
+      document.getElementById("content").innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function selectSlot(index) {
+      selectedSlot = currentSession.slots[index];
+
+      // Update UI selection
+      document.querySelectorAll('.slot-card').forEach(card => card.classList.remove('selected'));
+      document.getElementById(`slot-${index}`).classList.add('selected');
+    }
+
+    function renderConfirmed(data) {
+      document.getElementById("content").innerHTML = `
+        <div class="success-box">
+          <div class="success-icon"><i data-lucide="check"></i></div>
+          <h2 style="margin-bottom: 8px;">Session Confirmed!</h2>
+          <p style="color: var(--text-muted); font-size: 0.875rem;">The learner has been notified.</p>
+          
+          <div style="margin: 24px 0; text-align: left; background: white; padding: 16px; border-radius: 8px; border: 1px solid #bbf7d0;">
+            <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 4px;">${data.confirmedSlot.date}</div>
+            <div style="font-size: 0.875rem; color: var(--text-muted);">${data.confirmedSlot.startTime} - ${data.confirmedSlot.endTime}</div>
+          </div>
+
+          <div class="meet-link">
+            <strong>Meeting URL:</strong><br>
+            <a href="${data.meetLink}" target="_blank">${data.meetLink}</a>
+          </div>
+
+          <a href="${data.meetLink}" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+            <i data-lucide="external-link"></i> Join Meeting
+          </a>
+        </div>
+    `;
+      lucide.createIcons();
+    }
+
+    function confirmSlot() {
+      if (!selectedSlot) {
+        alert("Please select a slot first");
+        return;
+      }
+
+      fetch("http://127.0.0.1:3000/api/sessions/confirm", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot: selectedSlot })
+      })
+        .then(res => res.json())
+        .then(data => {
+          renderConfirmed(data);
+        });
+    }
+
+    loadSession();
+  </script>
+
+</body>
+
+</html>
